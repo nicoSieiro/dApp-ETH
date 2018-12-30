@@ -5,7 +5,7 @@ contract Airline {
     address public owner;
     
     struct Customer {
-        uint loyalityPoints;
+        uint loyaltyPoints;
         uint totalFlights;
     }
     
@@ -14,6 +14,7 @@ contract Airline {
         uint price;
     }
 
+    uint etherPerPoint = 0.5 ether;
     Flight[] public flights;
 
     mapping(address => Customer) public customers;
@@ -34,7 +35,7 @@ contract Airline {
         require(msg.value == flight.price);
 
         Customer storage customer = customers[msg.sender];
-        customer.loyalityPoints += 5;
+        customer.loyaltyPoints += 5;
         customer.totalFlights += 1;
         customerFlights[msg.sender].push(flight);
         customerTotalFlights[msg.sender] ++;
@@ -42,4 +43,29 @@ contract Airline {
         emit FlightPurchased(msg.sender, flight.price);
     }
 
+
+    function totalFlights() public view returns (uint){
+        return flights.length;
+    }
+
+    function redeemLoyaltyPoints() public {
+        Customer storage customer = customers[msg.sender];
+        uint etherToRefound = etherPerPoint * customer.loyaltyPoints;
+        msg.sender.transfer(etherToRefound);
+        customer.loyaltyPoints = 0;
+    }
+
+    function getRefundabeEther() public view returns (uint) {
+        return etherPerPoint * customers[msg.sender].loyaltyPoints;
+    }
+
+    function getAirlineBalance() public view returns(uint) {
+        address airlineAddress = this;
+        return airlineAddress.balance;
+    }
+
+    modifier isOwner() {
+        require(msg.sender == owner);
+        _;
+    }
 }
